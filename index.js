@@ -84,4 +84,31 @@ module.exports = class addTestFlightUser {
       });
   }
 
+  async getTesters() {
+    await this.login();
+    let url = this.urlApp + (this.groupId ? `/groups/${this.groupId}/testers` : '/testers');
+    let users = [];
+
+    while (url) {
+      let data = await request.get({
+        url,
+        headers: {'Content-Type': 'application/json'},
+        resolveWithFullResponse: true
+      });
+
+      const { body, headers } = data;
+      let { data: newUsers } = JSON.parse(body);
+
+      users = users.concat(newUsers);
+
+      // Responses are paginated using the header 'link' attribute
+      if (headers['link']) {
+        url = headers['link'].match(/<(.*?)>/)[1];
+      } else {
+        break;
+      }
+    }
+
+    return users;
+  }
 }
